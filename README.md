@@ -3,11 +3,13 @@ Rumour prediction model using PHEME dataset
 Paper-https://www.aclweb.org/anthology/P19-1498.pdf
 
 ```Data``` <br/>
-Processed data is available at <br/> 
+Processed as well as raw data is available at <br/> 
 https://drive.google.com/drive/folders/14t8CN6HvR1s2kXk03tSdtxxHYJeuo1C0?usp=sharing <br/>
 It contains both balanced as well as unbalanced dataset. <br/>
 Balancing is done by duplicating minority classes trees for each event type <br/>
 
+* Trained models are available in the models folder
+* BERT model is available at https://drive.google.com/file/d/1Dky5KHCTL8r8eudquJopTWglBk05LKf-/view?usp=sharing
 
 ```Encodings```
 * SKP encodings from tensorflow bidirectional implementation of skipthought availabel at <br/>
