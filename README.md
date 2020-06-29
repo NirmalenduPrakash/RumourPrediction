@@ -3,8 +3,7 @@ Rumour prediction model using PHEME dataset
 Paper-https://www.aclweb.org/anthology/P19-1498.pdf
 
 ```Data``` <br/>
-Processed as well as raw data is available at <br/> 
-https://drive.google.com/drive/folders/14t8CN6HvR1s2kXk03tSdtxxHYJeuo1C0?usp=sharing <br/>
+Processed as well as raw data is available in the data/Encoding folder <br/>
 It contains both balanced as well as unbalanced dataset. <br/>
 Balancing is done by duplicating minority classes trees for each event type <br/>
 
