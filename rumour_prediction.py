@@ -53,6 +53,8 @@ class Global:
     def reset(self):
       self.g_nodes=[]
 
+gb=Global()
+
 def get_key_value(dicts,search_id,keys=None):
   res={}
   for d in dicts:
@@ -155,7 +157,10 @@ class skpemt:
 class BERT:
   def __init__(self):
     self.model=SentenceClassifier()
-    self.model.load_state_dict(torch.load('BERT_CONFIG/multinli_model.pt'))
+    if(torch.cuda.is_available()):
+      self.model.load_state_dict(torch.load('BERT_CONFIG/multinli_model.pt'))
+    else:
+      self.model.load_state_dict(torch.load('BERT_CONFIG/multinli_model.pt',map_location=torch.device('cpu')))  
     self.size=768
     self.tokenizer = BertTokenizer.from_pretrained('BERT_CONFIG')    
   def tokenize(self,tokens):
@@ -418,7 +423,9 @@ def load_labels():
   else:
     load_stance_labels()            
 
+
 def dump_embedding(typ):
+  global gb
   root_path='all-rnr-annotated-threads/'
   for e in event_labels:#['charliehebdo','sydneysiege','germanwings-crash','ferguson','ottawashooting']:
     ev=Event(root_path+e)
@@ -726,8 +733,8 @@ if  __name__== "__main__":
       embedding=SKP(encoder)
     elif(args.encoding=='BERT'):
       embedding=BERT()  
-    dump_embedding(args.embedding)
-    balance_embedding(args.embedding)
+    dump_embedding(encoding)
+    balance_embedding(encoding)
 
 
 
