@@ -3,7 +3,7 @@ Rumour prediction model using PHEME dataset
 Paper-https://www.aclweb.org/anthology/P19-1498.pdf
 
 ```Requirements```<br/>
-pip install requirement.py
+pip install -r requirement.py
 
 ```Steps to execute```<br/>
 For BERT,data is already processed into binary format and <br/>
