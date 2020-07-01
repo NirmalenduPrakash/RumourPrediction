@@ -2,10 +2,10 @@
 Rumour prediction model using PHEME dataset
 Paper-https://www.aclweb.org/anthology/P19-1498.pdf
 
-```Requirements```
+```Requirements```<br/>
 pip install requirement.py
 
-```Steps to execute```
+```Steps to execute```<br/>
 For BERT,data is already processed into binary format and <br/>
 available under data\Encoding folder <br/>
 SKP encodings can be downloaded from https://drive.google.com/drive/folders/14h5MCeF09j-d8u3VvzX6j00aEXOrhMXU?usp=sharing <br/>
@@ -14,14 +14,14 @@ Save under Encoding/SKP folder
 if you wish to encode data again,<br/>
 For BERT encodings, download this file - https://drive.google.com/file/d/1K648Cl9j0TplZXiL393h3CHX48ghM2n8/view?usp=sharing into BERT_CONFIG folder <br/>
 comment these lines in rumour_prediction.py:<br/>
-from skip_thoughts.skip_thoughts import configuration
-from skip_thoughts.skip_thoughts import encoder_manager
+from skip_thoughts.skip_thoughts import configuration <br/>
+from skip_thoughts.skip_thoughts import encoder_manager <br/>
+rumour_prediction.py -mode process -encoding BERT <br/>
 
-rumour_prediction.py -mode process -encoding BERT
-For SKP encodings, download this folder - https://drive.google.com/drive/folders/1WvYG-d9fPQuapyVRQ3Rb9_OdBiMf_Zsq?usp=sharing into the encoding folder
-rumour_prediction.py -mode process -encoding SKP
+For SKP encodings, download this folder - https://drive.google.com/drive/folders/1WvYG-d9fPQuapyVRQ3Rb9_OdBiMf_Zsq?usp=sharing into the encoding folder<br/>
+rumour_prediction.py -mode process -encoding SKP <br/>
 
-```args```
+```args```<br/>
 -encoding options-'BERT','SKP','EMT','SKPEMT' [Currently BERT and SKP work]<br/>
 -tree options-'normal','BCTree' [Currently works for normal]<br/>
 -mode options-'train','process' [train trains the model on processed binarized data,<br/>
