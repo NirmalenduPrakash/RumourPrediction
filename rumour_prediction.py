@@ -614,7 +614,7 @@ def train(embedding='BERT'):
     optimizer = optim.Adam(model.parameters(), lr=.008)
     train_loss=0
     val_losses=[]
-    for iter in range(1):
+    for iter in range(30):
       for event,lbl in train_loader(val_index):
         print('training on {}...'.format(lbl))   
         for indx,tree in enumerate(event.treelist):
