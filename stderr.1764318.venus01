@@ -1,0 +1,10 @@
+[nltk_data] Error loading punkt: <urlopen error [Errno 111] Connection
+[nltk_data]     refused>
+[nltk_data] Error loading stopwords: <urlopen error [Errno 111]
+[nltk_data]     Connection refused>
+Traceback (most recent call last):
+  File "/home/svu/e0401988/NLP/BC_TREE/rumour prediction/tree_lstm.py", line 659, in <module>
+    print(classification_report(y_true,y_pred))
+  File "/home/svu/e0401988/volta_pypkg/lib/python3.6/site-packages/sklearn/metrics/_classification.py", line 2021, in classification_report
+    name_width = max(len(cn) for cn in target_names)
+ValueError: max() arg is an empty sequence
