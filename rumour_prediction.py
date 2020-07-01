@@ -1,10 +1,10 @@
 # %tensorflow_version 1.x
 import json
 import glob2
-import nltk
-nltk.download('punkt')
-nltk.download('stopwords')
-from nltk.corpus import stopwords
+# import nltk
+# nltk.download('punkt')
+# nltk.download('stopwords')
+# from nltk.corpus import stopwords
 import regex as re
 import numpy as np
 import torch
@@ -20,16 +20,25 @@ import ast
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 import argparse
-from skip_thoughts.skip_thoughts import configuration
-from skip_thoughts.skip_thoughts import encoder_manager
+# from skip_thoughts.skip_thoughts import configuration
+# from skip_thoughts.skip_thoughts import encoder_manager
 # for DeepMoji Encoder
 # import examples.encode_texts
+
+
+veracity_dict={}
+stance_dict={}
+model=None
+criterion = nn.CrossEntropyLoss()
+event_labels=['charliehebdo','sydneysiege','germanwings-crash','ferguson','ottawashooting']
+args=None
+tree_lbl=''
 
 cwd=os.path.dirname(os.path.realpath(__file__))
 os.chdir(cwd)
 print(cwd)
 
-class Node():
+class Node:
   def __init__(self,x=None,y=None,id=None,children=None):
      self.x=x
      self.id=id
@@ -395,6 +404,8 @@ def load_stance_labels():
       stance_dict[annot['tweetid']]=stance_enum[annot['responsetype-vs-source']]
  
 def load_labels():
+  global veracity_dict
+  global stance_dict
   if(os.path.isfile('veracity_dict.pkl')):
     with open('veracity_dict.pkl','rb') as f:
       veracity_dict=pickle.load(f) 
@@ -409,7 +420,7 @@ def load_labels():
 
 def dump_embedding(typ):
   root_path='all-rnr-annotated-threads/'
-  for e in event_labels#['charliehebdo','sydneysiege','germanwings-crash','ferguson','ottawashooting']:
+  for e in event_labels:#['charliehebdo','sydneysiege','germanwings-crash','ferguson','ottawashooting']:
     ev=Event(root_path+e)
     ev.create_tree(gb)
     with open('data/Encoding/{}/data_{}{}.pkl'.format(typ,tree_lbl,e),'wb') as f:
@@ -454,7 +465,7 @@ def dump_embedding(typ):
 # Balancing each class for rumour labels
 def balance_embedding(typ):
   ev_label_count=[]
-  for e in event_labels#['charliehebdo','sydneysiege','germanwings-crash','ferguson','ottawashooting']:
+  for e in event_labels:#['charliehebdo','sydneysiege','germanwings-crash','ferguson','ottawashooting']:
     with open('data/Encoding/{}/data_{}{}.pkl'.format(typ,tree_lbl,e),'rb') as f:
       ev=pickle.load(f)
     label={0:0,1:0,2:0}   
@@ -463,7 +474,7 @@ def balance_embedding(typ):
       label[veracity_dict[str(tree[0])]]+=1
     ev_label_count.append((e,label))    
   print(ev_label_count)
-  for e in event_labels#['charliehebdo','sydneysiege','germanwings-crash','ferguson','ottawashooting']:
+  for e in event_labels:#['charliehebdo','sydneysiege','germanwings-crash','ferguson','ottawashooting']:
     with open('data/Encoding/{}/data_{}{}.pkl'.format(typ,tree_lbl,e),'rb') as f:
       ev=pickle.load(f) 
     # for event in ev:
@@ -504,7 +515,7 @@ def balance_embedding(typ):
       pickle.dump(ev,f) 
 
   ev_label_count=[]
-  for e in event_labels#['charliehebdo','sydneysiege','germanwings-crash','ferguson','ottawashooting']:
+  for e in event_labels:#['charliehebdo','sydneysiege','germanwings-crash','ferguson','ottawashooting']:
     with open('data/Encoding/{}/data_{}{}_balanced.pkl'.format(typ,tree_lbl,e),'rb') as f:
       ev=pickle.load(f)
     label={0:0,1:0,2:0}   
@@ -531,13 +542,17 @@ def val_loader(val_index):
   return ev,event_labels[val_index]
 
 
-def measure(val_index):
+def measure(model,val_index):
     with torch.no_grad():
       # for val_index in range(5):
       # for event,lbl in val_loader(val_index):
       event,lbl=val_loader(val_index)
-      # print('testing on {}...'.format(lbl))    
-      for tree in event:
+      # print('testing on {}...'.format(lbl))  
+      # if(args.encoding!='BERT'):
+      #   lst= event.treelist
+      # else:
+      #   lst=event   
+      for tree in event.treelist:
         nodes=tree[1]
         for i in range(len(nodes)):
           nodes[i].h=None
@@ -552,13 +567,17 @@ def measure(val_index):
             result=model(nodes[i],is_last=True) 
             results['veracity'][lbl].append((veracity_dict[str(tree[0])],torch.argmax(result,dim=-1).item()))
 
-def calculate_val_loss(index):
+def calculate_val_loss(model,index):
   with torch.no_grad():
     loss=0
     stance_loss=0 
     event,lbl=val_loader(index) 
     print('testing on {}...'.format(lbl))
-    for tree in event:
+    # if(args.encoding!='BERT'):
+    #   lst= event.treelist
+    # else:
+    #   lst=event      
+    for tree in event.treelist:
       nodes=tree[1]
       for i in range(len(nodes)):
         nodes[i].h=None
@@ -576,18 +595,22 @@ def calculate_val_loss(index):
     return loss.data.item() + stance_loss.data.item()
 
 # Training
-def train():  
+def train(embedding='BERT'):
+  if(embedding=='BERT'):
+    embed_size=768
+  elif(embedding=='SKP'):
+    embed_size=2400  
   for e in range(5):  
     print('==================== Iteration {} =========='.format(e))
     val_index=e%5 
-    model=TreeLSTMCell(768,768)
+    model=TreeLSTMCell(embed_size,embed_size)
     optimizer = optim.Adam(model.parameters(), lr=.008)
     train_loss=0
     val_losses=[]
-    for iter in range(30):
+    for iter in range(1):
       for event,lbl in train_loader(val_index):
-        print('training on {}...'.format(lbl))    
-        for indx,tree in enumerate(event):
+        print('training on {}...'.format(lbl))   
+        for indx,tree in enumerate(event.treelist):
           loss=0
           stance_loss=0
           optimizer.zero_grad()  
@@ -605,7 +628,7 @@ def train():
                 stance_loss+=criterion(result,torch.tensor(nodes[i].y).view(-1))
                 stance_count+=1
             else:
-              result=model(nodes[i],is_last=True)                
+              result=model(nodes[i],is_last=True)                              
               loss+=criterion(result,torch.tensor(veracity_dict[str(tree[0])],dtype=torch.long).view(-1))         
           if(iter%2==0 and stance_loss>0):
             stance_loss.backward()
@@ -616,65 +639,62 @@ def train():
           loss+=stance_loss 
           train_loss+=loss.data.item()                
         print('train loss : {}'.format(train_loss))
-      val_loss= calculate_val_loss(val_index)
+      val_loss= calculate_val_loss(model,val_index)
       if (iter==0):
-        measure(val_index)  
+        measure(model,val_index)  
       elif (len(val_losses)>0 and val_loss<min(val_losses)):
-        measure(val_index)    
+        measure(model,val_index)    
       val_losses.append(val_loss) 
 
-def report():
+def report(args):
   if(args.save=='yes'):
     f=open('report.txt','w+')
   """# Metrics"""
-  for lbl in event_labels#['charliehebdo','sydneysiege','germanwings-crash','ferguson','ottawashooting']:
+  for lbl in event_labels:#['charliehebdo','sydneysiege','germanwings-crash','ferguson','ottawashooting']:
     y_true=[y[0] for y in results['veracity'][lbl]]
     y_pred=[y[1] for y in results['veracity'][lbl]]
 
     if(args.save=='yes'):
-      f.write('=============={}==Veracity Report=============='.format(lbl))
+      f.write('=============={}==Veracity Report==============\n'.format(lbl))
       f.write(classification_report(y_true,y_pred))
     else:  
-      print('=============={}==Veracity Report=============='.format(lbl))
+      print('=============={}==Veracity Report==============\n'.format(lbl))
       print(classification_report(y_true,y_pred))
 
     y_true=[y[0] for y in results['stance'][lbl]]
     y_pred=[y[1] for y in results['stance'][lbl]]
     if(args.save=='yes'):
-      f.write('=============={}==Stance Report=============='.format(lbl))
+      f.write('=============={}==Stance Report==============\n'.format(lbl))
       f.write(classification_report(y_true,y_pred))  
     else:      
-      print('=============={}==Stance Report=============='.format(lbl))
+      print('=============={}==Stance Report==============\n'.format(lbl))
       print(classification_report(y_true,y_pred))
 
   # Overall veracity confusion matrix
   y_true=[]
   y_pred=[]
-  for lbl in event_labels#['ottawashooting','sydneysiege','germanwings-crash','ferguson','ottawashooting']:
+  for lbl in event_labels:#['ottawashooting','sydneysiege','germanwings-crash','ferguson','ottawashooting']:
     y_true.extend([y[0] for y in results['veracity'][lbl]])
     y_pred.extend([y[1] for y in results['veracity'][lbl]])
   if(args.save=='yes'):
       f.write('==============Veracity Confucion matrix=============='.format(lbl))
-      f.write(confusion_matrix(y_true,y_pred,normalize='true'))
+      f.write(np.array2string(confusion_matrix(y_true,y_pred,normalize='true'),separator='\n'))
       f.close()  
   else:          
     print('================Veracity Confucion matrix==============')
     print(confusion_matrix(y_true,y_pred,normalize='true'))
+
 
 if  __name__== "__main__":
   results={'stance':{'charliehebdo':[],'sydneysiege':[],\
                     'germanwings-crash':[],'ferguson':[],'ottawashooting':[]}, \
                     'veracity':{'charliehebdo':[],'sydneysiege':[],\
                     'germanwings-crash':[],'ferguson':[],'ottawashooting':[]}}
-  veracity_dict={}
-  stance_dict={}
-  model=None
-  criterion = nn.CrossEntropyLoss()
-  event_labels=['charliehebdo','sydneysiege','germanwings-crash','ferguson','ottawashooting']
+
 
   parser = argparse.ArgumentParser()
   parser.add_argument("-encoding", default='BERT', type=str, choices=['BERT','SKP','EMT','SKPEMT'])
-  parser.add_argument("-tree", default='Normal', type=str, choices=['normal','BCTree'])
+  parser.add_argument("-tree", default='normal', type=str, choices=['normal','BCTree'])
   parser.add_argument("-mode", default='train',type=str,choices=['train','process'])
   parser.add_argument("-save", default='yes',type=str,choices=['yes','no'])
   
@@ -688,8 +708,9 @@ if  __name__== "__main__":
     tree_lbl=''  
 
   if(mode=='train'):
-    train()
-    report()
+    load_labels()
+    train(encoding)
+    report(args)
   elif(mode=='process'):
     load_labels()
     if(args.encoding=='SKP'):

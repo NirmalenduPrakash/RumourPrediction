@@ -18,7 +18,7 @@ from skip_thoughts.skip_thoughts import configuration <br/>
 from skip_thoughts.skip_thoughts import encoder_manager <br/>
 rumour_prediction.py -mode process -encoding BERT <br/>
 
-For SKP encodings, download this folder - https://drive.google.com/drive/folders/1WvYG-d9fPQuapyVRQ3Rb9_OdBiMf_Zsq?usp=sharing into the encoding folder<br/>
+For SKP encodings, download this folder - https://drive.google.com/drive/folders/1WvYG-d9fPQuapyVRQ3Rb9_OdBiMf_Zsq?usp=sharing into the root folder<br/>
 rumour_prediction.py -mode process -encoding SKP <br/>
 
 ```args```<br/>
